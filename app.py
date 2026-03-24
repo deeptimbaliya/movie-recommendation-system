@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 import gdown
 import streamlit as st
 import pickle
@@ -13,10 +14,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+Omdb_api_key = os.getenv("OMDB_API_KEY")
+
 @st.cache_resource
 def load_files():
-    movies_id = "1YbzfZN1gc8RlqbyPXNYIl4q35DAOFO9U"
-    similarity_id = "1yLt6h_Cy3wvHTj7Ir5YCORoDt0RyaPDD"
+    movies_url = os.getenv("MOVIES_DATA_URL")
+    similarity_url = os.getenv("SIMILARITY_DATA_URL")
 
     try:
         # Remove old corrupted files
@@ -26,8 +29,8 @@ def load_files():
             os.remove("similarity.pkl")
 
         # Correct download
-        gdown.download(f"https://drive.google.com/uc?id={movies_id}", "movies.pkl", quiet=False)
-        gdown.download(f"https://drive.google.com/uc?id={similarity_id}", "similarity.pkl", quiet=False)
+        gdown.download(movies_url, "movies.pkl", quiet=False)
+        gdown.download(similarity_url, "similarity.pkl", quiet=False)
 
         # Load
         with open("movies.pkl", "rb") as f:
@@ -48,7 +51,7 @@ DEFAULT_POSTER = "https://via.placeholder.com/300x450?text=No+Image"
 
 def fetch_poster(title):
     # API call to fetch poster
-    url = f"https://www.omdbapi.com/?t={title}&apikey=8edc8f55"
+    url = f"https://www.omdbapi.com/?t={title}&apikey={Omdb_api_key}"
     data = requests.get(url).json()
     return data['Poster'] if 'Poster' in data else "https://via.placeholder.com/150"
 

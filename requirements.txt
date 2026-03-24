@@ -4,3 +4,4 @@ numpy
 scikit-learn
 pickle-mixin
 gdown
+python-dotenv
