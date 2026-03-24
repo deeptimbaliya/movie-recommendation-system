@@ -1,0 +1,38 @@
+# Python cache
+
+**pycache**/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+
+venv/
+env/
+ENV/
+
+# Streamlit cache
+
+.streamlit/
+
+# Jupyter Notebook checkpoints
+
+.ipynb_checkpoints/
+
+# System files
+
+.DS_Store
+Thumbs.db
+
+# Logs
+
+*.log
+
+# Large model/data files (optional - if too big)
+
+*.pkl
+*.csv
+
+# Secrets
+
+.env
