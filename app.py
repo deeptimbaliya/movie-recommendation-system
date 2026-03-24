@@ -16,21 +16,25 @@ st.markdown("""
 @st.cache_resource
 def load_files():
     # File IDs
-    movies_id = "1YbzfZN1gc8RlqbyPXNYIl4q35DAOFO9U"
-    similarity_id = "1yLt6h_Cy3wvHTj7Ir5YCORoDt0RyaPDD"
+    try:
+        movies_id = "1YbzfZN1gc8RlqbyPXNYIl4q35DAOFO9U"
+        similarity_id = "1yLt6h_Cy3wvHTj7Ir5YCORoDt0RyaPDD"
 
-    # Download only if not exists
-    if not os.path.exists("movies.pkl"):
-        gdown.download(movies_id, output="movies.pkl", quiet=False)
+        # Download only if not exists
+        if not os.path.exists("movies.pkl"):
+            gdown.download(movies_id, output="movies.pkl", quiet=False)
 
-    if not os.path.exists("similarity.pkl"):
-        gdown.download(similarity_id, output="similarity.pkl", quiet=False)
+        if not os.path.exists("similarity.pkl"):
+            gdown.download(similarity_id, output="similarity.pkl", quiet=False)
 
-    # Load files
-    movies = pickle.load(open('movies.pkl', 'rb'))
-    similarity = pickle.load(open('similarity.pkl', 'rb'))
+        # Load files
+        movies = pickle.load(open('movies.pkl', 'rb'))
+        similarity = pickle.load(open('similarity.pkl', 'rb'))
 
-    return movies, similarity
+        return movies, similarity
+    except Exception as e:
+        st.error(f"Error loading files: {e}")
+        return None, None
 
 movies, similarity_count = load_files()
 
