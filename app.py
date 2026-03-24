@@ -21,10 +21,10 @@ def load_files():
 
     # Download only if not exists
     if not os.path.exists("movies.pkl"):
-        gdown.download(f"https://drive.google.com/uc?id={movies_id}", "movies.pkl", quiet=False)
+        gdown.download(movies_id, output="movies.pkl", quiet=False)
 
     if not os.path.exists("similarity.pkl"):
-        gdown.download(f"https://drive.google.com/uc?id={similarity_id}", "similarity.pkl", quiet=False)
+        gdown.download(similarity_id, output="similarity.pkl", quiet=False)
 
     # Load files
     movies = pickle.load(open('movies.pkl', 'rb'))
