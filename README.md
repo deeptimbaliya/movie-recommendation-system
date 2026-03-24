@@ -23,8 +23,7 @@ streamlit run app.py
 ```
 
 ## 🌐 Live Demo
-
-(Add your deployed link here)
+https://movie-recommendation-system-by-dyt.streamlit.app/
 
 ## 📌 Author
 Deep Timbaliya
