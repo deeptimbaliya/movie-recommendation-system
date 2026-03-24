@@ -14,12 +14,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-Omdb_api_key = os.getenv("OMDB_API_KEY")
+Omdb_api_key = st.secrets("OMDB_API_KEY")
 
 @st.cache_resource
 def load_files():
-    movies_url = os.getenv("MOVIES_DATA_URL")
-    similarity_url = os.getenv("SIMILARITY_DATA_URL")
+    movies_url = st.secrets("MOVIES_DATA_URL")
+    similarity_url = st.secrets("SIMILARITY_DATA_URL")
 
     try:
         # Remove old corrupted files
