@@ -6,12 +6,57 @@ import pandas as pd
 import requests
 import os
 
+st.set_page_config(
+    page_title="Movie Recommender",
+    page_icon="🎬",
+    layout="wide"
+)
+
 st.markdown("""
-    <style>
-    body {
-        background-color: #0e1117;
-    }
-    </style>
+<style>
+/* Background */
+body {
+    background-color: #0e1117;
+}
+
+/* Main container */
+.main {
+    background-color: #0e1117;
+}
+
+/* Title */
+h1 {
+    text-align: center;
+    color: #E50914;
+    font-weight: bold;
+}
+
+/* Subtext */
+p {
+    text-align: center;
+    color: #cfcfcf;
+}
+
+/* Button styling */
+.stButton>button {
+    background-color: #E50914;
+    color: white;
+    border-radius: 8px;
+    height: 3em;
+    width: 100%;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Selectbox */
+.stSelectbox {
+    margin-bottom: 20px;
+}
+            
+div:hover {
+    transform: scale(1.05);
+    transition: 0.3s;
+</style>
 """, unsafe_allow_html=True)
 
 Omdb_api_key = st.secrets["OMDB_API_KEY"]
@@ -50,10 +95,12 @@ movies, similarity_count = load_files()
 DEFAULT_POSTER = "https://via.placeholder.com/300x450?text=No+Image"
 
 def fetch_poster(title):
-    # API call to fetch poster
     url = f"https://www.omdbapi.com/?t={title}&apikey={Omdb_api_key}"
     data = requests.get(url).json()
-    return data['Poster'] if 'Poster' in data else "https://via.placeholder.com/150"
+
+    if data.get('Poster') and data['Poster'] != "N/A":
+        return data['Poster']
+    return DEFAULT_POSTER
 
 # recommendation function
 def recommend(movie):
@@ -84,19 +131,22 @@ def recommend(movie):
 # UI Design
 st.set_page_config(page_title="Movie Recommender", layout="centered")
 
-st.title("🎬 Movie Recommender System")
+col1, col2, col3 = st.columns([1,2,1])
 
-st.write("Get movie recommendations instantly!")
+with col2:
+    st.title("🎬 Movie Recommender")
+    st.write("Get movie recommendations instantly!")
 
 # dropdown
 movie_list = movies['title'].values
-selected_movie = st.selectbox("Select a movie", movie_list)
-
+selected_movie = st.selectbox("Select a movie", movie_list, index=0)
+st.markdown("<br>", unsafe_allow_html=True)
 # button
 if st.button("Recommend"):
-    recommendations = recommend(selected_movie)
-
-    st.subheader("Recommended Movies:")
+    with st.spinner("Finding best movies for you... 🍿"):
+        recommendations = recommend(selected_movie)
+    st.markdown("---")
+    st.subheader("🎯 Recommended Movies")
 
     cols = st.columns(3)
 
@@ -113,12 +163,19 @@ if st.button("Recommend"):
             # ALWAYS render
             st.markdown(
                 f"""
-                <div style="text-align: center; margin-bottom:20px;">
-                    <img src="{poster}" width="200" height="300"
-                    style="border-radius:10px; object-fit:cover;" />
-                    <p style="font-size:14px; margin-top:10px;">
+                <div style="
+                    text-align:center;
+                    background-color:#1c1f26;
+                    padding:10px;
+                    border-radius:12px;
+                    transition:0.3s;
+                ">
+                    <img src="{poster}" width="100%" 
+                    style="border-radius:10px;" />
+                    
+                    <h4 style="color:white; margin-top:10px;">
                         {movie["title"]}
-                    </p>
+                    </h4>
                 </div>
                 """,
                 unsafe_allow_html=True
