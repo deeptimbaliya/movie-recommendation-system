@@ -15,23 +15,29 @@ st.markdown("""
 
 @st.cache_resource
 def load_files():
-    # File IDs
+    movies_id = "1YbzfZN1gc8RlqbyPXNYIl4q35DAOFO9U"
+    similarity_id = "1yLt6h_Cy3wvHTj7Ir5YCORoDt0RyaPDD"
+
     try:
-        movies_id = "1YbzfZN1gc8RlqbyPXNYIl4q35DAOFO9U"
-        similarity_id = "1yLt6h_Cy3wvHTj7Ir5YCORoDt0RyaPDD"
+        # Remove old corrupted files
+        if os.path.exists("movies.pkl"):
+            os.remove("movies.pkl")
+        if os.path.exists("similarity.pkl"):
+            os.remove("similarity.pkl")
 
-        # Download only if not exists
-        if not os.path.exists("movies.pkl"):
-            gdown.download(movies_id, output="movies.pkl", quiet=False)
+        # Correct download
+        gdown.download(f"https://drive.google.com/uc?id={movies_id}", "movies.pkl", quiet=False)
+        gdown.download(f"https://drive.google.com/uc?id={similarity_id}", "similarity.pkl", quiet=False)
 
-        if not os.path.exists("similarity.pkl"):
-            gdown.download(similarity_id, output="similarity.pkl", quiet=False)
+        # Load
+        with open("movies.pkl", "rb") as f:
+            movies = pickle.load(f)
 
-        # Load files
-        movies = pickle.load(open('movies.pkl', 'rb'))
-        similarity = pickle.load(open('similarity.pkl', 'rb'))
+        with open("similarity.pkl", "rb") as f:
+            similarity = pickle.load(f)
 
         return movies, similarity
+
     except Exception as e:
         st.error(f"Error loading files: {e}")
         return None, None
