@@ -5,6 +5,7 @@ import pickle
 import pandas as pd
 import requests
 import os
+import time
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -16,6 +17,8 @@ st.set_page_config(
 # ---------------- CUSTOM CSS ----------------
 st.markdown("""
 <style>
+
+/* Background */
 body {
     background-color: #0e1117;
 }
@@ -31,7 +34,7 @@ h1 {
     font-weight: bold;
 }
 
-/* Text */
+/* Subtitle */
 p {
     text-align: center;
     color: #cfcfcf;
@@ -46,13 +49,78 @@ p {
     width: 100%;
     font-size: 16px;
     font-weight: bold;
-}
-
-/* Card Hover */
-.card:hover {
-    transform: scale(1.05);
     transition: 0.3s;
 }
+
+.stButton>button:hover {
+    transform: scale(1.05);
+    background-color: #ff1e2d;
+}
+
+/* Movie Card */
+.movie-card {
+    background: linear-gradient(145deg, #1c1f26, #111318);
+    padding: 12px;
+    border-radius: 14px;
+    text-align: center;
+    transition: all 0.4s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+/* Poster */
+.movie-card img {
+    border-radius: 10px;
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+/* Title */
+.movie-title {
+    color: white;
+    margin-top: 10px;
+    font-size: 15px;
+    transition: color 0.3s ease;
+}
+
+/* Hover Effects */
+.movie-card:hover {
+    transform: translateY(-10px) scale(1.05);
+    box-shadow: 0 10px 30px rgba(229,9,20,0.6);
+}
+
+.movie-card:hover img {
+    transform: scale(1.08);
+}
+
+.movie-card:hover .movie-title {
+    color: #E50914;
+}
+
+/* Fade-in animation */
+.fade-in {
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Section title glow */
+.section-title {
+    text-align:center;
+    color:white;
+    text-shadow: 0px 0px 10px #E50914;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -66,19 +134,16 @@ def load_files():
     similarity_url = st.secrets.get("SIMILARITY_DATA_URL", "")
 
     try:
-        # Remove old files
         if os.path.exists("movies.pkl"):
             os.remove("movies.pkl")
         if os.path.exists("similarity.pkl"):
             os.remove("similarity.pkl")
 
-        # Download
         if movies_url:
             gdown.download(movies_url, "movies.pkl", quiet=True)
         if similarity_url:
             gdown.download(similarity_url, "similarity.pkl", quiet=True)
 
-        # Load safely
         if os.path.exists("movies.pkl"):
             with open("movies.pkl", "rb") as f:
                 movies = pickle.load(f)
@@ -115,7 +180,6 @@ def fetch_poster(title):
             return data['Poster']
 
         return DEFAULT_POSTER
-
     except:
         return DEFAULT_POSTER
 
@@ -170,7 +234,6 @@ if movies is not None and 'title' in movies:
 else:
     movie_list = []
 
-# Handle empty movie list
 if len(movie_list) == 0:
     st.warning("⚠️ Movie list not available. Please try again later.")
     st.stop()
@@ -187,7 +250,11 @@ if st.button("Recommend"):
         st.warning("😕 No recommendations found.")
     else:
         st.markdown("---")
-        st.subheader("🎯 Recommended Movies")
+
+        st.markdown(
+            '<h2 class="section-title">🎯 Recommended Movies</h2>',
+            unsafe_allow_html=True
+        )
 
         cols = st.columns(6)
 
@@ -195,10 +262,16 @@ if st.button("Recommend"):
             col = cols[idx % 6]
 
             with col:
+                time.sleep(0.08)  # stagger animation
+
                 poster = movie["poster"] or DEFAULT_POSTER
 
-                st.image(poster, use_container_width=True)
                 st.markdown(
-                    f"<p style='text-align:center; color:white; font-size:16px; margin-top:5px;'>{movie['title']}</p>",
+                    f"""
+                    <div class="movie-card fade-in">
+                        <img src="{poster}" />
+                        <div class="movie-title">{movie["title"]}</div>
+                    </div>
+                    """,
                     unsafe_allow_html=True
                 )
