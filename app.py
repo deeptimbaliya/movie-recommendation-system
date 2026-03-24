@@ -6,20 +6,20 @@ import pandas as pd
 import requests
 import os
 
+# ---------------- PAGE CONFIG ----------------
 st.set_page_config(
     page_title="Movie Recommender",
     page_icon="🎬",
     layout="wide"
 )
 
+# ---------------- CUSTOM CSS ----------------
 st.markdown("""
 <style>
-/* Background */
 body {
     background-color: #0e1117;
 }
 
-/* Main container */
 .main {
     background-color: #0e1117;
 }
@@ -31,13 +31,13 @@ h1 {
     font-weight: bold;
 }
 
-/* Subtext */
+/* Text */
 p {
     text-align: center;
     color: #cfcfcf;
 }
 
-/* Button styling */
+/* Button */
 .stButton>button {
     background-color: #E50914;
     color: white;
@@ -48,135 +48,170 @@ p {
     font-weight: bold;
 }
 
-/* Selectbox */
-.stSelectbox {
-    margin-bottom: 20px;
-}
-            
-div:hover {
+/* Card Hover */
+.card:hover {
     transform: scale(1.05);
     transition: 0.3s;
+}
 </style>
 """, unsafe_allow_html=True)
 
-Omdb_api_key = st.secrets["OMDB_API_KEY"]
+# ---------------- API KEY ----------------
+Omdb_api_key = st.secrets.get("OMDB_API_KEY", "")
 
+# ---------------- LOAD FILES ----------------
 @st.cache_resource
 def load_files():
-    movies_url = st.secrets["MOVIES_DATA_URL"]
-    similarity_url = st.secrets["SIMILARITY_DATA_URL"]
+    movies_url = st.secrets.get("MOVIES_DATA_URL", "")
+    similarity_url = st.secrets.get("SIMILARITY_DATA_URL", "")
 
     try:
-        # Remove old corrupted files
+        # Remove old files
         if os.path.exists("movies.pkl"):
             os.remove("movies.pkl")
         if os.path.exists("similarity.pkl"):
             os.remove("similarity.pkl")
 
-        # Correct download
-        gdown.download(movies_url, "movies.pkl", quiet=False)
-        gdown.download(similarity_url, "similarity.pkl", quiet=False)
+        # Download
+        if movies_url:
+            gdown.download(movies_url, "movies.pkl", quiet=True)
+        if similarity_url:
+            gdown.download(similarity_url, "similarity.pkl", quiet=True)
 
-        # Load
-        with open("movies.pkl", "rb") as f:
-            movies = pickle.load(f)
+        # Load safely
+        if os.path.exists("movies.pkl"):
+            with open("movies.pkl", "rb") as f:
+                movies = pickle.load(f)
+        else:
+            movies = pd.DataFrame(columns=["title"])
 
-        with open("similarity.pkl", "rb") as f:
-            similarity = pickle.load(f)
+        if os.path.exists("similarity.pkl"):
+            with open("similarity.pkl", "rb") as f:
+                similarity = pickle.load(f)
+        else:
+            similarity = None
 
         return movies, similarity
 
     except Exception as e:
         st.error(f"Error loading files: {e}")
-        return None, None
+        return pd.DataFrame(columns=["title"]), None
 
 movies, similarity_count = load_files()
 
+# ---------------- DEFAULT POSTER ----------------
 DEFAULT_POSTER = "https://via.placeholder.com/300x450?text=No+Image"
 
+# ---------------- FETCH POSTER ----------------
 def fetch_poster(title):
-    url = f"https://www.omdbapi.com/?t={title}&apikey={Omdb_api_key}"
-    data = requests.get(url).json()
+    try:
+        if not Omdb_api_key:
+            return DEFAULT_POSTER
 
-    if data.get('Poster') and data['Poster'] != "N/A":
-        return data['Poster']
-    return DEFAULT_POSTER
+        url = f"https://www.omdbapi.com/?t={title}&apikey={Omdb_api_key}"
+        data = requests.get(url).json()
 
-# recommendation function
+        if data.get('Poster') and data['Poster'] != "N/A":
+            return data['Poster']
+
+        return DEFAULT_POSTER
+
+    except:
+        return DEFAULT_POSTER
+
+# ---------------- RECOMMEND FUNCTION ----------------
 def recommend(movie):
     try:
-        print(f"Selected movie: {movie}")
-        index = movies[movies['title'] == movie].index[0]
+        if movies is None or similarity_count is None:
+            return []
 
-        # get similarity scores
+        if movie not in movies['title'].values:
+            return []
+
+        index = movies[movies['title'] == movie].index[0]
         distances = similarity_count[index]
 
         movies_list = sorted(
-            list(enumerate(distances)), reverse=True, key=lambda x: x[1])
+            list(enumerate(distances)),
+            reverse=True,
+            key=lambda x: x[1]
+        )
 
         recommendations = []
 
-        for i in movies_list[1:7]:  # top 6 recommendations
+        for i in movies_list[1:7]:
             title = movies.iloc[i[0]].title
             poster = fetch_poster(title)
+
             recommendations.append({
                 "title": title,
                 "poster": poster
             })
+
         return recommendations
-    except IndexError:
-        st.error("Movie not found. Please select a valid movie from the dropdown.")
+
+    except Exception as e:
+        st.error(f"Recommendation error: {e}")
         return []
 
-# UI Design
-st.set_page_config(page_title="Movie Recommender", layout="centered")
+# ---------------- UI ----------------
 
+# Center Title
 col1, col2, col3 = st.columns([1,2,1])
-
 with col2:
     st.title("🎬 Movie Recommender")
     st.write("Get movie recommendations instantly!")
 
-# dropdown
-movie_list = movies['title'].values
-selected_movie = st.selectbox("Select a movie", movie_list, index=0)
 st.markdown("<br>", unsafe_allow_html=True)
-# button
+
+# ---------------- MOVIE LIST SAFETY ----------------
+if movies is not None and 'title' in movies:
+    movie_list = movies['title'].values
+else:
+    movie_list = []
+
+# Handle empty movie list
+if len(movie_list) == 0:
+    st.warning("⚠️ Movie list not available. Please try again later.")
+    st.stop()
+
+# ---------------- INPUT ----------------
+selected_movie = st.selectbox("Select a movie", movie_list)
+
+# ---------------- BUTTON ----------------
 if st.button("Recommend"):
     with st.spinner("Finding best movies for you... 🍿"):
         recommendations = recommend(selected_movie)
-    st.markdown("---")
-    st.subheader("🎯 Recommended Movies")
 
-    cols = st.columns(3)
+    if not recommendations:
+        st.warning("😕 No recommendations found.")
+    else:
+        st.markdown("---")
+        st.subheader("🎯 Recommended Movies")
 
-    for idx, movie in enumerate(recommendations):
-        col = cols[idx % 3]
+        cols = st.columns(6)
 
-        with col:
-            poster = movie["poster"]
+        for idx, movie in enumerate(recommendations):
+            col = cols[idx % 6]
 
-            # Fix missing poster
-            if not poster or poster == "N/A":
-                poster = DEFAULT_POSTER
+            with col:
+                poster = movie["poster"] or DEFAULT_POSTER
 
-            # ALWAYS render
-            st.markdown(
-                f"""
-                <div style="
-                    text-align:center;
-                    background-color:#1c1f26;
-                    padding:10px;
-                    border-radius:12px;
-                    transition:0.3s;
-                ">
-                    <img src="{poster}" width="100%" 
-                    style="border-radius:10px;" />
-                    
-                    <h4 style="color:white; margin-top:10px;">
-                        {movie["title"]}
-                    </h4>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+                st.markdown(
+                    f"""
+                    <div class="card" style="
+                        text-align:center;
+                        background-color:#1c1f26;
+                        padding:10px;
+                        border-radius:12px;
+                    ">
+                        <img src="{poster}" width="100%" 
+                        style="border-radius:10px;" />
+                        
+                        <h4 style="color:white; margin-top:10px;">
+                            {movie["title"]}
+                        </h4>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
