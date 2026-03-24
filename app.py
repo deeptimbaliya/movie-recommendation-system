@@ -1,3 +1,4 @@
+import gdown
 import streamlit as st
 import pickle
 import pandas as pd
@@ -14,19 +15,16 @@ st.markdown("""
 
 @st.cache_resource
 def load_files():
-    # Direct download links
-    movies_url = 'https://drive.google.com/uc?id=1YbzfZN1gc8RlqbyPXNYIl4q35DAOFO9U'
-    similarity_url = 'https://drive.google.com/uc?id=1yLt6h_Cy3wvHTj7Ir5YCORoDt0RyaPDD'
+    # File IDs
+    movies_id = "1YbzfZN1gc8RlqbyPXNYIl4q35DAOFO9U"
+    similarity_id = "1yLt6h_Cy3wvHTj7Ir5YCORoDt0RyaPDD"
 
-    # Download movies.pkl
-    movies_res = requests.get(movies_url)
-    with open("movies.pkl", "wb") as f:
-        f.write(movies_res.content)
+    # Download only if not exists
+    if not os.path.exists("movies.pkl"):
+        gdown.download(f"https://drive.google.com/uc?id={movies_id}", "movies.pkl", quiet=False)
 
-    # Download similarity.pkl
-    sim_res = requests.get(similarity_url)
-    with open("similarity.pkl", "wb") as f:
-        f.write(sim_res.content)
+    if not os.path.exists("similarity.pkl"):
+        gdown.download(f"https://drive.google.com/uc?id={similarity_id}", "similarity.pkl", quiet=False)
 
     # Load files
     movies = pickle.load(open('movies.pkl', 'rb'))
