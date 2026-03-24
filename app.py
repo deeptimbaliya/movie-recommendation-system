@@ -197,21 +197,8 @@ if st.button("Recommend"):
             with col:
                 poster = movie["poster"] or DEFAULT_POSTER
 
+                st.image(poster, use_container_width=True)
                 st.markdown(
-                    f"""
-                    <div class="card" style="
-                        text-align:center;
-                        background-color:#1c1f26;
-                        padding:10px;
-                        border-radius:12px;
-                    ">
-                        <img src="{poster}" width="100%" 
-                        style="border-radius:10px;" />
-                        
-                        <h4 style="color:white; margin-top:10px;">
-                            {movie["title"]}
-                        </h4>
-                    </div>
-                    """,
+                    f"<p style='text-align:center; color:white; font-size:16px; margin-top:5px;'>{movie['title']}</p>",
                     unsafe_allow_html=True
                 )
